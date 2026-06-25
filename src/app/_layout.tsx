@@ -1,15 +1,153 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
-import { useColorScheme } from 'react-native';
+import { Stack } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
+import { StatusBar } from 'expo-status-bar';
+import { useEffect } from 'react';
+import { ActivityIndicator, Alert, StyleSheet, Text, View } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import {
+  SafeAreaProvider,
+  SafeAreaView,
+} from 'react-native-safe-area-context';
 
-import { AnimatedSplashOverlay } from '@/components/animated-icon';
-import AppTabs from '@/components/app-tabs';
+import { Button } from '@/components/button';
+import {
+  colors,
+  fontSize,
+  fontWeight,
+  spacing,
+} from '@/constants/theme';
+import { useSessionStore } from '@/store/useSessionStore';
 
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
+// Keep the native splash up until local data has either loaded or failed.
+SplashScreen.preventAutoHideAsync().catch(() => {
+  // The splash may already be hidden during fast refresh.
+});
+
+export default function RootLayout() {
+  const hydrationStatus = useSessionStore((state) => state.hydrationStatus);
+  const retryHydration = useSessionStore((state) => state.retryHydration);
+  const resetPersistedData = useSessionStore(
+    (state) => state.resetPersistedData,
+  );
+
+  useEffect(() => {
+    if (hydrationStatus !== 'pending') {
+      SplashScreen.hideAsync().catch(() => {});
+    }
+  }, [hydrationStatus]);
+
+  const handleReset = () => {
+    Alert.alert(
+      'Reset local data?',
+      'This permanently removes the saved sessions that could not be loaded.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Reset data',
+          style: 'destructive',
+          onPress: () => {
+            void resetPersistedData();
+          },
+        },
+      ],
+    );
+  };
+
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <AnimatedSplashOverlay />
-      <AppTabs />
-    </ThemeProvider>
+    <GestureHandlerRootView style={styles.flex}>
+      <SafeAreaProvider>
+        <StatusBar style="dark" />
+        <Stack
+          screenOptions={{
+            headerShadowVisible: false,
+            headerStyle: { backgroundColor: colors.background },
+            headerTintColor: colors.text,
+            headerTitleStyle: {
+              fontWeight: fontWeight.bold,
+              color: colors.text,
+            },
+            contentStyle: { backgroundColor: colors.background },
+          }}>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="session/[id]" options={{ title: 'Session' }} />
+        </Stack>
+
+        {hydrationStatus === 'pending' ? (
+          <SafeAreaView
+            style={styles.centered}
+            accessibilityViewIsModal
+            accessibilityLabel="Loading saved sessions">
+            <ActivityIndicator color={colors.primary} size="large" />
+            <Text style={styles.loadingText}>Loading sessions…</Text>
+          </SafeAreaView>
+        ) : hydrationStatus === 'error' ? (
+          <SafeAreaView style={styles.recovery} accessibilityViewIsModal>
+            <Text style={styles.recoveryTitle} accessibilityRole="header">
+              Saved data could not be loaded
+            </Text>
+            <Text style={styles.recoveryMessage}>
+              Your sessions have not been overwritten. Retry loading them, or
+              reset local data to start empty.
+            </Text>
+            <View style={styles.recoveryActions}>
+              <Button label="Retry" onPress={retryHydration} />
+              <Button
+                label="Reset local data"
+                variant="danger"
+                onPress={handleReset}
+              />
+            </View>
+          </SafeAreaView>
+        ) : null}
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
+
+const styles = StyleSheet.create({
+  flex: { flex: 1 },
+  centered: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    zIndex: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.md,
+    backgroundColor: colors.background,
+  },
+  loadingText: {
+    color: colors.textSecondary,
+    fontSize: fontSize.md,
+  },
+  recovery: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    zIndex: 10,
+    justifyContent: 'center',
+    padding: spacing.xl,
+    gap: spacing.md,
+    backgroundColor: colors.background,
+  },
+  recoveryTitle: {
+    color: colors.text,
+    fontSize: fontSize.xl,
+    fontWeight: fontWeight.bold,
+    textAlign: 'center',
+  },
+  recoveryMessage: {
+    color: colors.textSecondary,
+    fontSize: fontSize.md,
+    lineHeight: 24,
+    textAlign: 'center',
+  },
+  recoveryActions: {
+    gap: spacing.sm,
+    marginTop: spacing.md,
+  },
+});
