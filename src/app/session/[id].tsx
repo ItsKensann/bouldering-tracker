@@ -87,11 +87,10 @@ export default function SessionScreen() {
     Keyboard.dismiss();
   };
 
-  const handleEnd = () =>
-    Alert.alert('End session?', 'You can still view it in History afterward.', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'End session', onPress: () => endSession(session.id) },
-    ]);
+  const handleEnd = () => {
+    endSession(session.id);
+    router.replace('/');
+  };
 
   const handleDelete = () =>
     Alert.alert(
