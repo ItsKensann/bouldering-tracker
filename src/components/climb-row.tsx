@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { colors, fontSize, spacing } from '@/constants/theme';
+import { colors, fontFamily, fontSize, letterSpacing, spacing } from '@/constants/theme';
 import { formatTime } from '@/lib/date';
 import type { ClimbLog } from '@/types';
 
@@ -16,16 +16,16 @@ interface ClimbRowProps {
 export function ClimbRow({ climb, onDelete }: ClimbRowProps) {
   return (
     <View style={styles.row}>
-      <GradeBadge grade={climb.grade} />
+      <GradeBadge grade={climb.grade} muted={climb.result === 'attempt'} />
       <View style={styles.middle}>
-        <ResultBadge result={climb.result} />
         {climb.notes ? (
           <Text style={styles.notes} numberOfLines={2}>
             {climb.notes}
           </Text>
         ) : null}
+        <Text style={styles.time}>{formatTime(climb.createdAt)}</Text>
       </View>
-      <Text style={styles.time}>{formatTime(climb.createdAt)}</Text>
+      <ResultBadge result={climb.result} />
       {onDelete ? (
         <Pressable
           onPress={onDelete}
@@ -45,14 +45,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.hairline,
   },
   middle: { flex: 1, gap: spacing.xs },
-  notes: { fontSize: fontSize.sm, color: colors.textSecondary },
-  time: { fontSize: fontSize.xs, color: colors.textMuted },
+  notes: {
+    fontFamily: fontFamily.sans,
+    fontSize: fontSize.sm,
+    color: colors.textSecondary,
+  },
+  time: {
+    fontFamily: fontFamily.sansMedium,
+    fontSize: fontSize.eyebrow,
+    letterSpacing: letterSpacing.wide,
+    color: colors.textMuted,
+  },
   delete: {
-    width: 44,
-    height: 44,
+    width: 40,
+    height: 40,
     alignItems: 'center',
     justifyContent: 'center',
   },

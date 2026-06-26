@@ -23,7 +23,16 @@ import { ClimbRow } from '@/components/climb-row';
 import { EmptyState } from '@/components/empty-state';
 import { GradeSelector } from '@/components/grade-selector';
 import { ResultSelector } from '@/components/result-selector';
-import { colors, fontSize, fontWeight, radius, spacing } from '@/constants/theme';
+import { SectionHeader } from '@/components/section-header';
+import { StatTile } from '@/components/stat-tile';
+import {
+  colors,
+  fontFamily,
+  fontSize,
+  letterSpacing,
+  radius,
+  spacing,
+} from '@/constants/theme';
 import { formatDate, formatDuration, formatTime } from '@/lib/date';
 import { summarizeSession } from '@/lib/stats';
 import { useSessionStore } from '@/store/useSessionStore';
@@ -79,6 +88,7 @@ export default function SessionScreen() {
   }
 
   const summary = summarizeSession(session);
+  const attempts = session.climbs.filter((c) => c.result === 'attempt').length;
 
   const handleAdd = () => {
     addClimb(session.id, { grade, result, notes });
@@ -117,6 +127,29 @@ export default function SessionScreen() {
     setNotesExpanded((expanded) => !expanded);
   };
 
+  const header = (
+    <View style={styles.header}>
+      <Text style={styles.eyebrow}>
+        {`${formatTime(session.startedAt)} · ${formatDuration(
+          session.startedAt,
+          session.endedAt,
+        )}${isActive ? ' · In progress' : ''}`}
+      </Text>
+
+      <View style={styles.statsGrid}>
+        <StatTile label="Sends" value={String(summary.sendCount)} />
+        <StatTile label="Attempts" value={String(attempts)} />
+        <StatTile label="Hardest" value={summary.topGrade ?? '—'} />
+        <StatTile
+          label="On rock"
+          value={formatDuration(session.startedAt, session.endedAt)}
+        />
+      </View>
+
+      <SectionHeader>Climbs</SectionHeader>
+    </View>
+  );
+
   return (
     <SafeAreaView style={styles.safe} edges={['bottom']}>
       <KeyboardAvoidingView
@@ -130,27 +163,11 @@ export default function SessionScreen() {
             <ClimbRow
               climb={item}
               onDelete={
-                isActive
-                  ? () => removeClimb(session.id, item.id)
-                  : undefined
+                isActive ? () => removeClimb(session.id, item.id) : undefined
               }
             />
           )}
-          ListHeaderComponent={
-            <View style={styles.summary}>
-              <Text style={styles.summaryTime}>
-                {formatTime(session.startedAt)} ·{' '}
-                {formatDuration(session.startedAt, session.endedAt)}
-                {isActive ? ' · in progress' : ''}
-              </Text>
-              <Text style={styles.summaryStats}>
-                {summary.climbCount}{' '}
-                {summary.climbCount === 1 ? 'climb' : 'climbs'} ·{' '}
-                {summary.sendCount} sent
-                {summary.topGrade ? ` · top ${summary.topGrade}` : ''}
-              </Text>
-            </View>
-          }
+          ListHeaderComponent={header}
           ListEmptyComponent={
             <Text style={styles.empty}>
               {isActive
@@ -175,7 +192,9 @@ export default function SessionScreen() {
 
         {isActive ? (
           <View style={styles.panel}>
-            <Text style={styles.panelLabel}>Grade</Text>
+            <View style={styles.gradeHero}>
+              <Text style={styles.gradeHeroText}>{grade}</Text>
+            </View>
             <GradeSelector value={grade} onChange={setGrade} />
 
             <Text style={styles.panelLabel}>Result</Text>
@@ -219,6 +238,7 @@ export default function SessionScreen() {
               />
               <Button
                 label="Add climb"
+                glyph="登"
                 onPress={handleAdd}
                 accessibilityHint={`Logs a ${grade} ${result}`}
                 style={styles.addButton}
@@ -238,20 +258,22 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     paddingBottom: spacing.xl,
   },
-  summary: {
-    gap: spacing.xs,
-    paddingBottom: spacing.md,
+  header: { marginBottom: spacing.xs },
+  eyebrow: {
+    fontFamily: fontFamily.sansMedium,
+    fontSize: fontSize.eyebrow,
+    letterSpacing: letterSpacing.eyebrow,
+    textTransform: 'uppercase',
+    color: colors.textMuted,
     marginBottom: spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
   },
-  summaryTime: { fontSize: fontSize.sm, color: colors.textSecondary },
-  summaryStats: {
-    fontSize: fontSize.md,
-    fontWeight: fontWeight.semibold,
-    color: colors.text,
+  statsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    columnGap: spacing.xl,
   },
   empty: {
+    fontFamily: fontFamily.sansLight,
     fontSize: fontSize.sm,
     color: colors.textSecondary,
     textAlign: 'center',
@@ -260,34 +282,45 @@ const styles = StyleSheet.create({
   deleteButton: { marginTop: spacing.xl },
   panel: {
     borderTopWidth: 1,
-    borderTopColor: colors.border,
+    borderTopColor: colors.hairline,
     backgroundColor: colors.background,
-    padding: spacing.lg,
-    gap: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.sm,
+    gap: spacing.md,
+  },
+  gradeHero: { alignItems: 'center', paddingVertical: spacing.xs },
+  gradeHeroText: {
+    fontFamily: fontFamily.serifBold,
+    fontSize: fontSize.display2,
+    lineHeight: fontSize.display2,
+    color: colors.text,
   },
   panelLabel: {
-    fontSize: fontSize.sm,
-    fontWeight: fontWeight.semibold,
-    color: colors.textSecondary,
+    fontFamily: fontFamily.sansMedium,
+    fontSize: fontSize.eyebrow,
+    letterSpacing: letterSpacing.eyebrow,
+    textTransform: 'uppercase',
+    color: colors.textMuted,
   },
   notesToggle: {
     minHeight: 44,
     alignSelf: 'flex-start',
     justifyContent: 'center',
-    paddingHorizontal: spacing.xs,
   },
   notesToggleText: {
-    color: colors.primary,
+    fontFamily: fontFamily.sansMedium,
+    color: colors.text,
     fontSize: fontSize.sm,
-    fontWeight: fontWeight.semibold,
   },
   notes: {
     minHeight: 64,
     maxHeight: 96,
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
+    borderColor: colors.hairline2,
+    borderRadius: radius.sm,
     padding: spacing.md,
+    fontFamily: fontFamily.sans,
     fontSize: fontSize.md,
     color: colors.text,
     backgroundColor: colors.surface,
@@ -298,5 +331,5 @@ const styles = StyleSheet.create({
   },
   endButton: { flex: 1 },
   addButton: { flex: 1.4 },
-  pressed: { opacity: 0.7 },
+  pressed: { opacity: 0.6 },
 });

@@ -59,6 +59,54 @@ export function computeStats(sessions: ClimbingSession[]): Stats {
   };
 }
 
+/** One month's send rate for the trend sparkline. */
+export interface SendRatePoint {
+  /** Short month label, e.g. "MAR". */
+  label: string;
+  /** Sends ÷ climbs for the month, 0..1. Zero when the month has no climbs. */
+  rate: number;
+  /** False when no climbs were logged that month (so the UI can skip it). */
+  hasData: boolean;
+}
+
+/**
+ * Send rate per calendar month for the last `months` months (oldest -> newest).
+ * Derived purely from each climb's `createdAt` — no new stored fields. A flash
+ * counts as a send (see `isSend`).
+ */
+export function computeSendRateTrend(
+  sessions: ClimbingSession[],
+  months = 6,
+): SendRatePoint[] {
+  const climbs = sessions.flatMap((s) => s.climbs);
+  const now = new Date();
+
+  return Array.from({ length: months }, (_, i) => {
+    // i = 0 -> oldest month in the window, i = months - 1 -> current month.
+    const monthStart = new Date(
+      now.getFullYear(),
+      now.getMonth() - (months - 1 - i),
+      1,
+    );
+    const year = monthStart.getFullYear();
+    const month = monthStart.getMonth();
+
+    const inMonth = climbs.filter((c) => {
+      const d = new Date(c.createdAt);
+      return d.getFullYear() === year && d.getMonth() === month;
+    });
+    const sends = inMonth.filter((c) => isSend(c.result)).length;
+
+    return {
+      label: monthStart
+        .toLocaleDateString(undefined, { month: 'short' })
+        .toUpperCase(),
+      rate: inMonth.length > 0 ? sends / inMonth.length : 0,
+      hasData: inMonth.length > 0,
+    };
+  });
+}
+
 /** Lightweight per-session summary used in lists/cards. */
 export function summarizeSession(session: ClimbingSession) {
   const sentGrades = session.climbs

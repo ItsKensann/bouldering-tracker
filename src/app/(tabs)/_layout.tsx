@@ -1,27 +1,30 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 
-import { colors, fontWeight } from '@/constants/theme';
+import { colors, fontFamily, fontSize, letterSpacing } from '@/constants/theme';
 
 export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{
-        headerShadowVisible: false,
-        headerStyle: { backgroundColor: colors.background },
-        headerTitleStyle: { fontWeight: fontWeight.bold, color: colors.text },
-        tabBarActiveTintColor: colors.primary,
+        headerShown: false,
+        tabBarActiveTintColor: colors.text,
         tabBarInactiveTintColor: colors.textMuted,
+        tabBarLabelStyle: {
+          fontFamily: fontFamily.sansMedium,
+          fontSize: fontSize.eyebrow,
+          letterSpacing: letterSpacing.wide,
+          textTransform: 'uppercase',
+        },
         tabBarStyle: {
           backgroundColor: colors.background,
-          borderTopColor: colors.border,
+          borderTopColor: colors.hairline,
         },
       }}>
       <Tabs.Screen
         name="index"
         options={{
           title: 'Home',
-          headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="home-outline" color={color} size={size} />
           ),

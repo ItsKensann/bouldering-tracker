@@ -24,8 +24,10 @@ function makeClimb(
 }
 
 /**
- * Builds a few completed sessions over the past couple of weeks so History and
- * Stats have something to show during development.
+ * Builds completed sessions spread across the last several months so History,
+ * the grade pyramid, the peak-send ensō, and the send-rate trend all have
+ * something to show during development. The older sessions lean on attempts and
+ * easier grades so the trend reads as gradual progress toward recent sends.
  */
 export function buildSampleSessions(): ClimbingSession[] {
   const now = Date.now();
@@ -47,6 +49,7 @@ export function buildSampleSessions(): ClimbingSession[] {
   };
 
   return [
+    // This month — strongest sessions, including the V5 peak send.
     session(2, 75, [
       ['V2', 'flash', 5],
       ['V3', 'send', 15, 'Took a few tries on the crux'],
@@ -67,6 +70,33 @@ export function buildSampleSessions(): ClimbingSession[] {
       ['V5', 'attempt', 55, 'Project — getting closer'],
       ['V2', 'flash', 70],
       ['V5', 'send', 85, 'Sent it! New PR'],
+    ]),
+    // ~1 month ago.
+    session(38, 60, [
+      ['V2', 'attempt', 5],
+      ['V2', 'send', 18],
+      ['V3', 'attempt', 32],
+      ['V1', 'flash', 48],
+    ]),
+    // ~2 months ago — a grindy day, mostly attempts.
+    session(68, 70, [
+      ['V1', 'send', 5],
+      ['V2', 'attempt', 22],
+      ['V2', 'attempt', 38],
+      ['V3', 'attempt', 55, 'Could not link the top'],
+    ]),
+    // ~3 months ago.
+    session(98, 55, [
+      ['V1', 'flash', 5],
+      ['V1', 'send', 18],
+      ['V2', 'attempt', 40],
+    ]),
+    // ~4 months ago — early days on the wall.
+    session(128, 65, [
+      ['V0', 'flash', 5],
+      ['V1', 'attempt', 20],
+      ['V1', 'send', 40],
+      ['V2', 'attempt', 58],
     ]),
   ];
 }

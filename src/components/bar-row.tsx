@@ -1,6 +1,12 @@
 import { StyleSheet, Text, View, type DimensionValue } from 'react-native';
 
-import { colors, fontSize, fontWeight, radius, spacing } from '@/constants/theme';
+import {
+  colors,
+  fontFamily,
+  fontSize,
+  letterSpacing,
+  spacing,
+} from '@/constants/theme';
 
 interface BarRowProps {
   label: string;
@@ -12,7 +18,7 @@ interface BarRowProps {
 export function BarRow({ label, count, max, color = colors.primary }: BarRowProps) {
   const ratio = max > 0 ? count / max : 0;
   // A non-zero count always shows at least a small sliver so it's visible.
-  const widthPct = count > 0 ? Math.max(ratio * 100, 8) : 0;
+  const widthPct = count > 0 ? Math.max(ratio * 100, 6) : 0;
   return (
     <View style={styles.row}>
       <Text style={styles.label}>{label}</Text>
@@ -34,23 +40,24 @@ export function BarRow({ label, count, max, color = colors.primary }: BarRowProp
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   label: {
-    width: 36,
-    fontSize: fontSize.sm,
-    fontWeight: fontWeight.semibold,
+    width: 40,
+    fontFamily: fontFamily.serif,
+    fontSize: fontSize.lg,
     color: colors.text,
   },
   track: {
     flex: 1,
-    height: 12,
+    height: 20,
     backgroundColor: colors.surfaceAlt,
-    borderRadius: radius.pill,
     overflow: 'hidden',
   },
-  fill: { height: '100%', borderRadius: radius.pill },
+  fill: { height: '100%' },
   count: {
     width: 24,
     textAlign: 'right',
+    fontFamily: fontFamily.sansMedium,
     fontSize: fontSize.sm,
-    color: colors.textSecondary,
+    letterSpacing: letterSpacing.wide,
+    color: colors.textMuted,
   },
 });

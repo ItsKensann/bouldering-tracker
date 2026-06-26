@@ -1,6 +1,12 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-import { colors, fontSize, fontWeight, radius, spacing } from '@/constants/theme';
+import {
+  colors,
+  fontFamily,
+  fontSize,
+  letterSpacing,
+  spacing,
+} from '@/constants/theme';
 
 interface StatTileProps {
   label: string;
@@ -10,8 +16,10 @@ interface StatTileProps {
 export function StatTile({ label, value }: StatTileProps) {
   return (
     <View style={styles.tile}>
-      <Text style={styles.value}>{value}</Text>
       <Text style={styles.label}>{label}</Text>
+      <Text style={styles.value} numberOfLines={1} adjustsFontSizeToFit>
+        {value}
+      </Text>
     </View>
   );
 }
@@ -19,18 +27,24 @@ export function StatTile({ label, value }: StatTileProps) {
 const styles = StyleSheet.create({
   tile: {
     flexGrow: 1,
-    flexBasis: '47%',
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
-    gap: spacing.xs,
+    flexBasis: '46%',
+    borderTopWidth: 1,
+    borderTopColor: colors.hairline,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.sm,
+    gap: spacing.sm,
+  },
+  label: {
+    fontFamily: fontFamily.sansMedium,
+    fontSize: fontSize.eyebrow,
+    letterSpacing: letterSpacing.wider,
+    textTransform: 'uppercase',
+    color: colors.textMuted,
   },
   value: {
-    fontSize: fontSize.xxl,
-    fontWeight: fontWeight.bold,
+    fontFamily: fontFamily.serif,
+    fontSize: fontSize.display,
+    lineHeight: fontSize.display,
     color: colors.text,
   },
-  label: { fontSize: fontSize.sm, color: colors.textSecondary },
 });

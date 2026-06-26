@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { colors, fontSize, fontWeight, radius, spacing } from '@/constants/theme';
+import { colors, fontFamily, fontSize, radius, spacing } from '@/constants/theme';
 import { GRADES, type Grade } from '@/types';
 
 interface GradeSelectorProps {
@@ -37,22 +37,22 @@ export function GradeSelector({ value, onChange }: GradeSelectorProps) {
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   chip: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.pill,
-    backgroundColor: colors.surface,
+    flexGrow: 1,
+    paddingHorizontal: spacing.sm,
+    borderRadius: radius.xs,
+    backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: colors.border,
-    minWidth: 48,
+    borderColor: colors.hairline,
+    minWidth: 44,
     minHeight: 44,
     alignItems: 'center',
     justifyContent: 'center',
   },
   chipSelected: { backgroundColor: colors.primary, borderColor: colors.primary },
   chipText: {
+    fontFamily: fontFamily.sansMedium,
     fontSize: fontSize.md,
-    fontWeight: fontWeight.semibold,
-    color: colors.text,
+    color: colors.textMuted,
   },
   chipTextSelected: { color: colors.onPrimary },
 });

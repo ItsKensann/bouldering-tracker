@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { RESULT_META } from '@/constants/results';
-import { colors, fontSize, fontWeight, radius, spacing } from '@/constants/theme';
+import { colors, fontFamily, fontSize, radius, spacing } from '@/constants/theme';
 import { CLIMB_RESULTS, type ClimbResult } from '@/types';
 
 interface ResultSelectorProps {
@@ -12,10 +12,10 @@ interface ResultSelectorProps {
 export function ResultSelector({ value, onChange }: ResultSelectorProps) {
   return (
     <View
-      style={styles.row}
+      style={styles.group}
       accessibilityRole="radiogroup"
       accessibilityLabel="Result">
-      {CLIMB_RESULTS.map((result) => {
+      {CLIMB_RESULTS.map((result, index) => {
         const selected = result === value;
         const meta = RESULT_META[result];
         return (
@@ -27,17 +27,13 @@ export function ResultSelector({ value, onChange }: ResultSelectorProps) {
             accessibilityState={{ selected }}
             style={[
               styles.segment,
-              selected && {
-                backgroundColor: meta.selectedBackground,
-                borderColor: meta.selectedBackground,
-              },
+              index > 0 && styles.divider,
+              selected && styles.segmentSelected,
             ]}>
             <Text
               style={[
                 styles.label,
-                selected
-                  ? { color: meta.selectedForeground }
-                  : styles.labelDefault,
+                selected ? styles.labelSelected : styles.labelDefault,
               ]}>
               {meta.label}
             </Text>
@@ -49,17 +45,24 @@ export function ResultSelector({ value, onChange }: ResultSelectorProps) {
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', gap: spacing.sm },
+  group: {
+    flexDirection: 'row',
+    borderWidth: 1,
+    borderColor: colors.hairline2,
+    borderRadius: radius.sm,
+    overflow: 'hidden',
+  },
   segment: {
     flex: 1,
     minHeight: 48,
     paddingVertical: spacing.md,
-    borderRadius: radius.md,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
     alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'transparent',
   },
-  label: { fontSize: fontSize.md, fontWeight: fontWeight.semibold },
-  labelDefault: { color: colors.text },
+  divider: { borderLeftWidth: 1, borderLeftColor: colors.hairline },
+  segmentSelected: { backgroundColor: colors.primary },
+  label: { fontFamily: fontFamily.serif, fontSize: fontSize.md },
+  labelDefault: { color: colors.textMuted },
+  labelSelected: { color: colors.onPrimary },
 });

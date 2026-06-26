@@ -1,3 +1,13 @@
+import {
+  ShipporiMincho_600SemiBold,
+  ShipporiMincho_700Bold,
+} from '@expo-google-fonts/shippori-mincho';
+import {
+  ZenKakuGothicNew_300Light,
+  ZenKakuGothicNew_400Regular,
+  ZenKakuGothicNew_500Medium,
+} from '@expo-google-fonts/zen-kaku-gothic-new';
+import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
@@ -10,12 +20,7 @@ import {
 } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/button';
-import {
-  colors,
-  fontSize,
-  fontWeight,
-  spacing,
-} from '@/constants/theme';
+import { colors, fontFamily, fontSize, spacing } from '@/constants/theme';
 import { useSessionStore } from '@/store/useSessionStore';
 
 // Keep the native splash up until local data has either loaded or failed.
@@ -30,11 +35,21 @@ export default function RootLayout() {
     (state) => state.resetPersistedData,
   );
 
+  const [fontsLoaded] = useFonts({
+    ShipporiMincho_600SemiBold,
+    ShipporiMincho_700Bold,
+    ZenKakuGothicNew_300Light,
+    ZenKakuGothicNew_400Regular,
+    ZenKakuGothicNew_500Medium,
+  });
+
+  // Hold the splash until both fonts and local data are ready, so the first
+  // paint already shows the sumi-e typefaces (never the system fallback).
   useEffect(() => {
-    if (hydrationStatus !== 'pending') {
+    if (fontsLoaded && hydrationStatus !== 'pending') {
       SplashScreen.hideAsync().catch(() => {});
     }
-  }, [hydrationStatus]);
+  }, [fontsLoaded, hydrationStatus]);
 
   const handleReset = () => {
     Alert.alert(
@@ -63,7 +78,7 @@ export default function RootLayout() {
             headerStyle: { backgroundColor: colors.background },
             headerTintColor: colors.text,
             headerTitleStyle: {
-              fontWeight: fontWeight.bold,
+              fontFamily: fontFamily.serif,
               color: colors.text,
             },
             contentStyle: { backgroundColor: colors.background },
@@ -72,7 +87,7 @@ export default function RootLayout() {
           <Stack.Screen name="session/[id]" options={{ title: 'Session' }} />
         </Stack>
 
-        {hydrationStatus === 'pending' ? (
+        {!fontsLoaded || hydrationStatus === 'pending' ? (
           <SafeAreaView
             style={styles.centered}
             accessibilityViewIsModal
@@ -121,6 +136,7 @@ const styles = StyleSheet.create({
   loadingText: {
     color: colors.textSecondary,
     fontSize: fontSize.md,
+    fontFamily: fontFamily.sans,
   },
   recovery: {
     position: 'absolute',
@@ -137,12 +153,13 @@ const styles = StyleSheet.create({
   recoveryTitle: {
     color: colors.text,
     fontSize: fontSize.xl,
-    fontWeight: fontWeight.bold,
+    fontFamily: fontFamily.serif,
     textAlign: 'center',
   },
   recoveryMessage: {
     color: colors.textSecondary,
     fontSize: fontSize.md,
+    fontFamily: fontFamily.sansLight,
     lineHeight: 24,
     textAlign: 'center',
   },
