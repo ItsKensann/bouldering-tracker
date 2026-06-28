@@ -12,7 +12,7 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import { ActivityIndicator, Alert, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import {
   SafeAreaProvider,
@@ -21,6 +21,7 @@ import {
 
 import { Button } from '@/components/button';
 import { colors, fontFamily, fontSize, spacing } from '@/constants/theme';
+import { confirmDestructiveAction } from '@/lib/confirm';
 import { useSessionStore } from '@/store/useSessionStore';
 
 // Keep the native splash up until local data has either loaded or failed.
@@ -52,20 +53,12 @@ export default function RootLayout() {
   }, [fontsLoaded, hydrationStatus]);
 
   const handleReset = () => {
-    Alert.alert(
-      'Reset local data?',
-      'This permanently removes the saved sessions that could not be loaded.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Reset data',
-          style: 'destructive',
-          onPress: () => {
-            void resetPersistedData();
-          },
-        },
-      ],
-    );
+    confirmDestructiveAction({
+      title: 'Reset local data?',
+      message: 'This permanently removes the saved sessions that could not be loaded.',
+      confirmLabel: 'Reset data',
+      onConfirm: resetPersistedData,
+    });
   };
 
   return (

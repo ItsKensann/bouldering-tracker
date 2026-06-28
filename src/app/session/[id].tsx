@@ -5,7 +5,6 @@ import {
 } from 'expo-router';
 import { useLayoutEffect, useMemo, useState } from 'react';
 import {
-  Alert,
   FlatList,
   Keyboard,
   KeyboardAvoidingView,
@@ -33,6 +32,7 @@ import {
   radius,
   spacing,
 } from '@/constants/theme';
+import { confirmDestructiveAction } from '@/lib/confirm';
 import { formatDate, formatDuration, formatTime } from '@/lib/date';
 import { summarizeSession } from '@/lib/stats';
 import { useSessionStore } from '@/store/useSessionStore';
@@ -103,21 +103,15 @@ export default function SessionScreen() {
   };
 
   const handleDelete = () =>
-    Alert.alert(
-      'Delete session?',
-      'This permanently removes the session and its climbs.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => {
-            deleteSession(session.id);
-            router.back();
-          },
-        },
-      ],
-    );
+    confirmDestructiveAction({
+      title: 'Delete session?',
+      message: 'This permanently removes the session and its climbs.',
+      confirmLabel: 'Delete',
+      onConfirm: () => {
+        deleteSession(session.id);
+        router.back();
+      },
+    });
 
   const toggleNotes = () => {
     if (notesExpanded) {
