@@ -40,7 +40,7 @@ interface SessionState {
   /** Prepend sessions (used by the dev sample-data loader). */
   importSessions: (sessions: ClimbingSession[]) => void;
   /** Wipe all loaded data. */
-  clearAll: () => void;
+  clearAll: () => Promise<void>;
   /** Retry loading persisted data after a storage failure. */
   retryHydration: () => void;
   /** Explicitly discard unreadable persisted data and start empty. */
@@ -197,9 +197,22 @@ export const useSessionStore = create<SessionState>()(
         });
       },
 
-      clearAll: () => {
-        if (get().hydrationStatus === 'ready') {
-          set({ sessions: [], activeSessionId: null });
+      clearAll: async () => {
+        if (get().hydrationStatus !== 'ready') {
+          return;
+        }
+
+        try {
+          await resetSessionsStorage();
+          setSessionWritesEnabled(true);
+          set({
+            sessions: [],
+            activeSessionId: null,
+            hydrationStatus: 'ready',
+          });
+        } catch {
+          setSessionWritesEnabled(false);
+          set({ hydrationStatus: 'error' });
         }
       },
 

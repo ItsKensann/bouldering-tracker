@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
-import { Alert, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/button';
 import { Card } from '@/components/card';
@@ -16,6 +16,7 @@ import {
   spacing,
 } from '@/constants/theme';
 import { formatDate, formatDuration } from '@/lib/date';
+import { confirmDestructiveAction } from '@/lib/confirm';
 import { computeStats, summarizeSession } from '@/lib/stats';
 import { buildSampleSessions } from '@/mock/sampleData';
 import { selectActiveSession, useSessionStore } from '@/store/useSessionStore';
@@ -49,10 +50,12 @@ export default function HomeScreen() {
   };
 
   const handleClear = () =>
-    Alert.alert('Clear all data?', 'This deletes every session and climb.', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Clear', style: 'destructive', onPress: () => clearAll() },
-    ]);
+    confirmDestructiveAction({
+      title: 'Clear all data?',
+      message: 'This deletes every session and climb.',
+      confirmLabel: 'Clear',
+      onConfirm: clearAll,
+    });
 
   return (
     <Screen scroll>
