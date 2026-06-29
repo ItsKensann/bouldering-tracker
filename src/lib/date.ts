@@ -34,3 +34,25 @@ export function formatDuration(startIso: string, endIso?: string): string {
   const remMins = mins % 60;
   return remMins ? `${hours}h ${remMins}m` : `${hours}h`;
 }
+
+/**
+ * Workout-style elapsed clock for active sessions. e.g. "08:42", "1:03:15".
+ */
+export function formatClockDuration(
+  startIso: string,
+  nowMs = Date.now(),
+): string {
+  const startMs = new Date(startIso).getTime();
+  const elapsedMs = Number.isFinite(startMs) ? Math.max(0, nowMs - startMs) : 0;
+  const totalSeconds = Math.floor(elapsedMs / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  const pad = (value: number) => String(value).padStart(2, '0');
+
+  if (hours > 0) {
+    return `${hours}:${pad(minutes)}:${pad(seconds)}`;
+  }
+
+  return `${pad(minutes)}:${pad(seconds)}`;
+}

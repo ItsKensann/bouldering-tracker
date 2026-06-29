@@ -32,8 +32,14 @@ import {
   radius,
   spacing,
 } from '@/constants/theme';
+import { useNow } from '@/hooks/use-now';
 import { confirmDestructiveAction } from '@/lib/confirm';
-import { formatDate, formatDuration, formatTime } from '@/lib/date';
+import {
+  formatClockDuration,
+  formatDate,
+  formatDuration,
+  formatTime,
+} from '@/lib/date';
 import { summarizeSession } from '@/lib/stats';
 import { useSessionStore } from '@/store/useSessionStore';
 import type { ClimbResult, Grade } from '@/types';
@@ -58,6 +64,7 @@ export default function SessionScreen() {
   const [notesExpanded, setNotesExpanded] = useState(false);
 
   const isActive = !!session && !session.endedAt;
+  const now = useNow(isActive);
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -89,6 +96,9 @@ export default function SessionScreen() {
 
   const summary = summarizeSession(session);
   const attempts = session.climbs.filter((c) => c.result === 'attempt').length;
+  const durationLabel = isActive
+    ? formatClockDuration(session.startedAt, now)
+    : formatDuration(session.startedAt, session.endedAt);
 
   const handleAdd = () => {
     addClimb(session.id, { grade, result, notes });
@@ -124,20 +134,16 @@ export default function SessionScreen() {
   const header = (
     <View style={styles.header}>
       <Text style={styles.eyebrow}>
-        {`${formatTime(session.startedAt)} · ${formatDuration(
-          session.startedAt,
-          session.endedAt,
-        )}${isActive ? ' · In progress' : ''}`}
+        {`${formatTime(session.startedAt)} · ${durationLabel}${
+          isActive ? ' · In progress' : ''
+        }`}
       </Text>
 
       <View style={styles.statsGrid}>
         <StatTile label="Sends" value={String(summary.sendCount)} />
         <StatTile label="Attempts" value={String(attempts)} />
         <StatTile label="Hardest" value={summary.topGrade ?? '—'} />
-        <StatTile
-          label="On rock"
-          value={formatDuration(session.startedAt, session.endedAt)}
-        />
+        <StatTile label="On rock" value={durationLabel} />
       </View>
 
       <SectionHeader>Climbs</SectionHeader>

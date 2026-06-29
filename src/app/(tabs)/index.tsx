@@ -15,8 +15,9 @@ import {
   letterSpacing,
   spacing,
 } from '@/constants/theme';
-import { formatDate, formatDuration } from '@/lib/date';
+import { useNow } from '@/hooks/use-now';
 import { confirmDestructiveAction } from '@/lib/confirm';
+import { formatClockDuration, formatDate } from '@/lib/date';
 import { computeStats, summarizeSession } from '@/lib/stats';
 import { buildSampleSessions } from '@/mock/sampleData';
 import { selectActiveSession, useSessionStore } from '@/store/useSessionStore';
@@ -28,8 +29,16 @@ export default function HomeScreen() {
   const startSession = useSessionStore((s) => s.startSession);
   const importSessions = useSessionStore((s) => s.importSessions);
   const clearAll = useSessionStore((s) => s.clearAll);
+  const now = useNow(!!activeSession);
 
   const stats = useMemo(() => computeStats(sessions), [sessions]);
+  const activeSummary = useMemo(
+    () => (activeSession ? summarizeSession(activeSession) : null),
+    [activeSession],
+  );
+  const activeElapsed = activeSession
+    ? formatClockDuration(activeSession.startedAt, now)
+    : '';
   // Sessions are stored newest-first, so the first ended one is the most recent.
   const lastCompleted = useMemo(() => sessions.find((s) => s.endedAt), [sessions]);
 
@@ -69,8 +78,7 @@ export default function HomeScreen() {
         <Card style={styles.activeCard}>
           <Text style={styles.activeLabel}>Session in progress</Text>
           <Text style={styles.activeMeta}>
-            {summarizeSession(activeSession).climbCount} climbs ·{' '}
-            {formatDuration(activeSession.startedAt)}
+            {activeSummary?.climbCount ?? 0} climbs · {activeElapsed}
           </Text>
           <Button
             label="Resume session"
