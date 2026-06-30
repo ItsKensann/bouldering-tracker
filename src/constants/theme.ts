@@ -37,6 +37,7 @@ export const colors = {
   primary: '#1B1A17',
   primaryMuted: 'rgba(27,26,23,0.06)',
   onPrimary: '#FAF8F3', // paper, for text on ink
+  onPrimaryMuted: 'rgba(250,248,243,0.55)', // wash paper, for muted text on ink
 
   // Result palette — reused anywhere a result is shown (badges, selector, bars).
   // A flash is the lone splash of color (the seal); a send is ink; an attempt

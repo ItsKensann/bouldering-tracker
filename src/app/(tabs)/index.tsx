@@ -2,8 +2,9 @@ import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
+import { BrushRule } from '@/components/brush-rule';
 import { Button } from '@/components/button';
-import { Card } from '@/components/card';
+import { HomeAction } from '@/components/home-action';
 import { Screen } from '@/components/screen';
 import { SectionHeader } from '@/components/section-header';
 import { SessionCard } from '@/components/session-card';
@@ -18,7 +19,7 @@ import {
 import { useNow } from '@/hooks/use-now';
 import { confirmDestructiveAction } from '@/lib/confirm';
 import { formatClockDuration, formatDate } from '@/lib/date';
-import { computeStats, summarizeSession } from '@/lib/stats';
+import { computeStats, computeWeekStreak, summarizeSession } from '@/lib/stats';
 import { buildSampleSessions } from '@/mock/sampleData';
 import { selectActiveSession, useSessionStore } from '@/store/useSessionStore';
 
@@ -32,6 +33,7 @@ export default function HomeScreen() {
   const now = useNow(!!activeSession);
 
   const stats = useMemo(() => computeStats(sessions), [sessions]);
+  const streak = useMemo(() => computeWeekStreak(sessions), [sessions]);
   const activeSummary = useMemo(
     () => (activeSession ? summarizeSession(activeSession) : null),
     [activeSession],
@@ -41,6 +43,7 @@ export default function HomeScreen() {
     : '';
   // Sessions are stored newest-first, so the first ended one is the most recent.
   const lastCompleted = useMemo(() => sessions.find((s) => s.endedAt), [sessions]);
+  const hasSessions = stats.totalSessions > 0;
 
   const todayEyebrow = useMemo(
     () => formatDate(new Date().toISOString()).toUpperCase(),
@@ -67,55 +70,69 @@ export default function HomeScreen() {
     });
 
   return (
-    <Screen scroll>
+    <Screen scroll contentStyle={styles.content}>
       <View style={styles.hero}>
+        <View style={styles.watermark} pointerEvents="none">
+          <Text style={styles.watermarkChar}>登</Text>
+          <Text style={styles.watermarkChar}>山</Text>
+        </View>
         <Text style={styles.brand}>墨</Text>
         <Text style={styles.eyebrow}>{todayEyebrow}</Text>
         <Text style={styles.title}>Bouldering</Text>
+        {streak >= 1 ? (
+          <Text style={styles.streak}>
+            {streak}-week streak{streak >= 2 ? ' · keep it going' : ''}
+          </Text>
+        ) : null}
+        <BrushRule style={styles.heroRule} />
       </View>
 
-      {activeSession ? (
-        <Card style={styles.activeCard}>
-          <Text style={styles.activeLabel}>Session in progress</Text>
-          <Text style={styles.activeMeta}>
-            {activeSummary?.climbCount ?? 0} climbs · {activeElapsed}
-          </Text>
-          <Button
-            label="Resume session"
-            glyph="登"
-            onPress={handleStart}
-            style={styles.resumeBtn}
-          />
-        </Card>
+      <HomeAction
+        isActive={!!activeSession}
+        elapsed={activeElapsed}
+        climbCount={activeSummary?.climbCount}
+        sendCount={activeSummary?.sendCount}
+        onPress={handleStart}
+      />
+
+      {hasSessions ? (
+        <>
+          <View>
+            <SectionHeader>All time</SectionHeader>
+            <View style={styles.statsGrid}>
+              <StatTile
+                label="Sessions"
+                value={String(stats.totalSessions)}
+                style={styles.statCol}
+              />
+              <StatTile
+                label="Climbs"
+                value={String(stats.totalClimbs)}
+                style={styles.statCol}
+              />
+              <StatTile
+                label="Highest send"
+                value={stats.highestSent ?? '—'}
+                style={styles.statCol}
+              />
+            </View>
+          </View>
+
+          {lastCompleted ? (
+            <View>
+              <SectionHeader>Recent</SectionHeader>
+              <SessionCard
+                session={lastCompleted}
+                onPress={() => openSession(lastCompleted.id)}
+              />
+            </View>
+          ) : null}
+        </>
       ) : (
-        <Button
-          label="Start session"
-          glyph="登"
-          size="lg"
-          onPress={handleStart}
-        />
+        <Text style={styles.firstRun}>
+          Start a session to begin tracking — your climbs and stats appear here.
+        </Text>
       )}
-
-      <View style={styles.statsGrid}>
-        <StatTile label="Sessions" value={String(stats.totalSessions)} />
-        <StatTile label="Climbs logged" value={String(stats.totalClimbs)} />
-        <StatTile label="Highest send" value={stats.highestSent ?? '—'} />
-        <StatTile label="Highest flash" value={stats.highestFlashed ?? '—'} />
-      </View>
-
-      <View>
-        <SectionHeader>Recent session</SectionHeader>
-        {lastCompleted ? (
-          <SessionCard
-            session={lastCompleted}
-            onPress={() => openSession(lastCompleted.id)}
-          />
-        ) : (
-          <Text style={styles.placeholder}>
-            No completed sessions yet. Start one above to begin tracking.
-          </Text>
-        )}
-      </View>
 
       {__DEV__ ? (
         <View style={styles.devTools}>
@@ -133,10 +150,23 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  hero: { gap: spacing.xs },
+  content: { gap: spacing.xl },
+  hero: { position: 'relative', paddingTop: spacing.sm, gap: spacing.xs },
+  watermark: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    alignItems: 'center',
+  },
+  watermarkChar: {
+    fontFamily: fontFamily.serif,
+    fontSize: fontSize.display,
+    lineHeight: fontSize.display,
+    color: colors.washLight,
+  },
   brand: {
     fontFamily: fontFamily.serifBold,
-    fontSize: fontSize.xxl,
+    fontSize: fontSize.display2,
     color: colors.text,
     marginBottom: spacing.xs,
   },
@@ -149,35 +179,28 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: fontFamily.serif,
-    fontSize: fontSize.display,
-    lineHeight: fontSize.display,
+    fontSize: fontSize.display2,
+    lineHeight: fontSize.display2,
     color: colors.text,
   },
-  activeCard: { gap: spacing.sm },
-  activeLabel: {
+  streak: {
     fontFamily: fontFamily.sansMedium,
-    fontSize: fontSize.eyebrow,
-    letterSpacing: letterSpacing.eyebrow,
-    textTransform: 'uppercase',
-    color: colors.textMuted,
+    fontSize: fontSize.sm,
+    letterSpacing: letterSpacing.wide,
+    color: colors.textSecondary,
+    marginTop: spacing.xs,
   },
-  activeMeta: {
-    fontFamily: fontFamily.serif,
-    fontSize: fontSize.lg,
-    color: colors.text,
-  },
-  resumeBtn: { marginTop: spacing.sm },
+  heroRule: { marginTop: spacing.md },
   statsGrid: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    columnGap: spacing.xl,
-    rowGap: 0,
+    columnGap: spacing.lg,
   },
-  placeholder: {
+  statCol: { flexBasis: 0, flexGrow: 1 },
+  firstRun: {
     fontFamily: fontFamily.sansLight,
-    fontSize: fontSize.sm,
+    fontSize: fontSize.md,
     color: colors.textSecondary,
-    lineHeight: 22,
+    lineHeight: 26,
     paddingVertical: spacing.sm,
   },
   devTools: { gap: spacing.sm },

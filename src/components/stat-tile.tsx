@@ -1,4 +1,10 @@
-import { StyleSheet, Text, View } from 'react-native';
+import {
+  StyleSheet,
+  Text,
+  View,
+  type StyleProp,
+  type ViewStyle,
+} from 'react-native';
 
 import {
   colors,
@@ -11,11 +17,13 @@ import {
 interface StatTileProps {
   label: string;
   value: string;
+  /** Override layout (e.g. an even N-across row). Defaults to the 2-col basis. */
+  style?: StyleProp<ViewStyle>;
 }
 
-export function StatTile({ label, value }: StatTileProps) {
+export function StatTile({ label, value, style }: StatTileProps) {
   return (
-    <View style={styles.tile}>
+    <View style={[styles.tile, style]}>
       <Text style={styles.label}>{label}</Text>
       <Text style={styles.value} numberOfLines={1} adjustsFontSizeToFit>
         {value}

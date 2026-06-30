@@ -107,6 +107,47 @@ export function computeSendRateTrend(
   });
 }
 
+/**
+ * Number of consecutive weeks (Monday-anchored) ending at the current week that
+ * contain at least one session. A week with no session breaks the run.
+ *
+ * Grace for the in-progress week: if the current week has no session yet but the
+ * previous one does, the count starts from the previous week — so opening the app
+ * early in a fresh week doesn't read as a broken streak. Returns 0 when neither
+ * this week nor last week has a session.
+ *
+ * Pure / side-effect free, derived only from each session's `startedAt`.
+ */
+export function computeWeekStreak(sessions: ClimbingSession[]): number {
+  // Whole weeks since the Unix epoch. The epoch (1970-01-01) was a Thursday, so
+  // shift by 4 days to anchor week boundaries to Monday.
+  const MS_PER_WEEK = 7 * 24 * 60 * 60 * 1000;
+  const MONDAY_OFFSET_MS = 4 * 24 * 60 * 60 * 1000;
+  const weekIndex = (ms: number): number =>
+    Math.floor((ms + MONDAY_OFFSET_MS) / MS_PER_WEEK);
+
+  const activeWeeks = new Set<number>();
+  for (const session of sessions) {
+    const ms = new Date(session.startedAt).getTime();
+    if (Number.isFinite(ms)) {
+      activeWeeks.add(weekIndex(ms));
+    }
+  }
+  if (activeWeeks.size === 0) return 0;
+
+  const currentWeek = weekIndex(Date.now());
+  // Anchor on the current week, or the previous one during the grace window.
+  let week = activeWeeks.has(currentWeek) ? currentWeek : currentWeek - 1;
+  if (!activeWeeks.has(week)) return 0;
+
+  let streak = 0;
+  while (activeWeeks.has(week)) {
+    streak += 1;
+    week -= 1;
+  }
+  return streak;
+}
+
 /** Lightweight per-session summary used in lists/cards. */
 export function summarizeSession(session: ClimbingSession) {
   const sentGrades = session.climbs
